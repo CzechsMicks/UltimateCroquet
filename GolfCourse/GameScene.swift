@@ -1,0 +1,346 @@
+//
+//  GameScene.swift
+//  SwingSimulator
+//
+//  Created by Jacob Osterloh on 3/28/17.
+//  Copyright © 2017 Jacob Osterloh. All rights reserved.
+//
+
+import SpriteKit
+import GameplayKit
+
+class GameScene: Level, SKPhysicsContactDelegate {
+    
+    fileprivate var _player: CroquetGame = CroquetGame.sharedInstance
+    
+    private var lastUpdateTime : TimeInterval = 0
+    private var _golfBall: SKSpriteNode?
+    private var _arrowNode: SKSpriteNode?
+    private var _empty1: SKSpriteNode?
+    private var _empty2: SKSpriteNode?
+    private var _empty3: SKSpriteNode?
+    private var _stake: SKSpriteNode?
+    private var _wicket1: SKReferenceNode?
+    private var _wicket2: SKReferenceNode?
+    private var _wicket3: SKReferenceNode?
+    private var one: Bool = false
+    //var _power: CGFloat = 20
+    private var leftTouch: Bool = false
+    private var rightTouch: Bool = false
+    private var tileBackground: SKTileMapNode!
+    private var queueEmpty: [SKSpriteNode] = []
+    private var queueWicket: [SKReferenceNode] = []
+    var ballType: String = "redBall2"
+    var _ambientColor:UIColor?
+    
+    
+    var leftArrowButton: UIButton?
+    //weak var viewController: GameViewController!
+    
+    
+    override func sceneDidLoad() {
+        self._power = 90
+        setBallString(_player.currentBall())
+        loadSceneNodes()
+        physicsBody = SKPhysicsBody(edgeLoopFrom: tileBackground.frame)
+    }
+    
+    func loadSceneNodes() {
+        
+        guard let golfBall = childNode(withName: "golfBall") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _golfBall = golfBall
+        _golfBall?.texture = SKTexture(image: UIImage(named: ballType)!)
+        if(ballType == "discoBall"){
+            _ambientColor = UIColor.darkGray
+            let light = SKLightNode()
+            light.position = CGPoint(x: 0, y: 0)
+            light.falloff = 1
+            light.ambientColor = _ambientColor!
+            light.lightColor = UIColor.white
+            
+            _golfBall?.addChild(light)
+        }
+        if(ballType == "beachBall"){
+            physicsWorld.speed = 0.5
+            _golfBall?.physicsBody?.mass = 0.02585
+        }
+        if(ballType == "pokeball"){
+            let path = Bundle.main.path(forResource: "Pikachu", ofType: "sks")
+            let rainParticle = NSKeyedUnarchiver.unarchiveObject(withFile: path!) as! SKEmitterNode
+            
+            rainParticle.position = CGPoint(x: (self.size.width)/2, y: (self.size.height))
+            rainParticle.name = "rainParticle"
+            rainParticle.targetNode = self
+            
+            self.addChild(rainParticle)
+        }
+        if(ballType == "vinyl"){
+            physicsWorld.speed = 1.5
+        }
+        if(ballType == "spotifyIcon"){
+            let path = Bundle.main.path(forResource: "notes", ofType: "sks")
+            let rainParticle = NSKeyedUnarchiver.unarchiveObject(withFile: path!) as! SKEmitterNode
+            
+            rainParticle.position = CGPoint(x: (self.size.width)/2, y: (self.size.height))
+            rainParticle.name = "rainParticle"
+            rainParticle.targetNode = self
+            
+            self.addChild(rainParticle)
+        }
+//            let emitter = SKEmitterNode(fileNamed: "GroundPiece.sks")
+//            emitter?.position = (_golfBall?.position)!
+//            addChild(emitter!)
+//            
+////            emitter.zPosition = 2
+////            emitter.particleBirthRate = 1
+////            emitter.particleScale = 0.3;
+////            emitter.particleScaleRange = 0.2;
+////            emitter.emissionAngle = 3.14
+////            emitter.particleSpeed = 50
+////            //emitter.particleScaleSpeed = -0.01;
+////            let pokeImage: UIImage = UIImage(named: "pokeball")!
+////            let Texture = SKTexture(image: pokeImage)
+////            emitter.particleTexture = Texture
+////            //emitter.targetNode = _golfBall
+////            _golfBall?.addChild(emitter)
+//        }
+        
+        guard let arrowNode = childNode(withName: "arrow") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _arrowNode = arrowNode
+        
+        guard let tileBackground = childNode(withName: "tileBackground")
+            as? SKTileMapNode else {
+                fatalError("Background node not loaded")
+        }
+        self.tileBackground = tileBackground
+        
+        guard let wicket1 = childNode(withName: "wicket1") as? SKReferenceNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _wicket1 = wicket1
+        
+        guard let wicket2 = childNode(withName: "wicket2") as? SKReferenceNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _wicket2 = wicket2
+        
+        guard let wicket3 = childNode(withName: "wicket3") as? SKReferenceNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _wicket3 = wicket3
+        
+        guard let empty1 = childNode(withName: "empty1") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _empty1 = empty1
+        
+        guard let empty2 = childNode(withName: "empty2") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _empty2 = empty2
+        
+        guard let empty3 = childNode(withName: "empty3") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        
+        _empty3 = empty3
+        
+        guard let stake = childNode(withName: "stake") as? SKSpriteNode else {
+            fatalError("Sprite Nodes not loaded")
+        }
+        _stake = stake
+        
+       
+        
+        _wicket2?.alpha = 0.25
+        _wicket3?.alpha = 0.25
+        
+        if(queueEmpty.count == 0){
+            queueEmpty.append(_empty1!)
+            queueEmpty.append(_empty2!)
+            queueEmpty.append(_empty3!)
+            queueEmpty.append(_stake!)
+            queueWicket.append(_wicket1!)
+            queueWicket.append(_wicket2!)
+            queueWicket.append(_wicket3!)
+        }
+        
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        guard let touch = touches.first else {
+//            return
+//        }
+//        
+//        let location = touch.location(in: self)
+//        let previousLocation = touch.previousLocation(in: self)
+//        
+//        camera?.position.x += location.x - previousLocation.x
+//        camera?.position.y += location.y - previousLocation.y
+    }
+    
+    func increaseAngle(){
+        _arrowNode?.zRotation -= 0.05
+    }
+    
+    func decreaseAngle(){
+        _arrowNode?.zRotation += 0.05
+    }
+    
+    func swing(){
+        viewController.incrementStroke()
+        _arrowNode?.removeFromParent()
+        let x = cos((_arrowNode?.zRotation)!) * _power
+        let y = sin((_arrowNode?.zRotation)!) * _power
+        _golfBall?.physicsBody?.applyImpulse(CGVector(dx: x, dy: y))
+        
+    }
+    
+    func ballResting() -> Bool {
+        let ballVel = (_golfBall?.physicsBody?.velocity)!
+        let ballAngVel = (_golfBall?.physicsBody?.angularVelocity)!
+        if(ballAngVel < 0.5 && ballAngVel > -0.5 && ballVel.dy < 0.5 && ballVel.dy > -0.5 && ballVel.dx < 0.5 && ballVel.dx > -0.5){
+            return true
+        }else{
+            return false
+        }
+    }
+    
+    
+    override func update(_ currentTime: TimeInterval) {
+        // Initialize _lastUpdateTime if it has not already been
+        if (self.lastUpdateTime == 0) {
+            self.lastUpdateTime = currentTime
+        }
+        let ballResting = viewController.ballResting(golfBall: _golfBall!)
+        
+        
+        
+        if(!(viewController.leftArrowButton?.isHighlighted)!){
+            rightTouch = false
+        }
+        if(!(viewController.rightArrowButton?.isHighlighted)!){
+            leftTouch = false
+        }
+        
+        if((_golfBall?.position.y)! < 20){
+            camera?.position.y = 20
+            
+        }
+        else if((_golfBall?.position.y)! > 793){
+            camera?.position.y = 793
+        }
+        else{
+            camera?.position.y = (_golfBall?.position.y)!
+        }
+        if((_golfBall?.position.x)! < -(view?.frame.width)!  * 0.96){
+            camera?.position.x = -(view?.frame.width)!  * 0.96
+            
+        }
+        else if((_golfBall?.position.x)! > (view?.frame.width)! * 0.96){
+            camera?.position.x = (view?.frame.width)! * 0.96
+        }
+        else{
+            camera?.position.x = (_golfBall?.position.x)!
+        }
+        
+        
+        if((_golfBall?.physicsBody?.velocity.dx)! < CGFloat(8.0)
+            && (_golfBall?.physicsBody?.velocity.dx)! > CGFloat(-8.0)
+            && (_golfBall?.physicsBody?.velocity.dy)! < CGFloat(8.0)
+            && (_golfBall?.physicsBody?.velocity.dy)! > CGFloat(-8.0)){
+            _golfBall?.physicsBody?.velocity.dx = 0
+            _golfBall?.physicsBody?.velocity.dy = 0
+        }
+        
+        
+        if(leftTouch){
+            increaseAngle()
+        }
+        if(rightTouch){
+            decreaseAngle()
+        }
+        
+        if(ballResting){
+            viewController.turnControlsOn()
+            _arrowNode?.position = CGPoint(x: (_golfBall?.position.x)!, y: (_golfBall?.position.y)!)
+            if(!children.contains(_arrowNode!)){
+                addChild(_arrowNode!)
+            }
+        
+        }else{
+            viewController.turnControlsOff()
+            if(_golfBall?.intersects(queueEmpty.first!))!{
+                if(queueEmpty.first == _stake){
+                    viewController._scene = nil
+                    view?.presentScene(nil)
+                    viewController.finishedLevel()
+                }else{
+                    queueWicket.first?.alpha = 0.25
+                    queueEmpty.removeFirst()
+                    queueWicket.removeFirst()
+                    queueWicket.first?.alpha = 1
+                }
+                
+            }
+        }
+        
+    }
+    
+    override func update(button: String) {
+        if(button == "L"){
+            _arrowNode?.zRotation += 0.001
+            rightTouch = true
+        }
+        else if(button == "R"){
+            _arrowNode?.zRotation -= 0.001
+            leftTouch = true
+        }
+        else if(button == "S"){
+            swing()
+        }
+        
+    }
+    
+    //0: redBall2, 1: disco, 2: poke, 3: beach, 4: spotify,
+    //5: pandora, 6: vinyl, 7: youtube
+    func setBallString(_ ball: Int){
+        switch ball {
+        case 0:
+            ballType = "redBall2"
+        case 1:
+            ballType = "discoBall"
+        case 2:
+            ballType = "pokeball"
+        case 3:
+            ballType = "beachBall"
+        case 4:
+            ballType = "spotifyIcon"
+        case 5:
+            ballType = "pandoraIcon"
+        case 6:
+            ballType = "vinyl"
+        case 7:
+            ballType = "youtubeIcon"
+        default:
+            ballType = "redBall2"
+        }
+    }
+}
