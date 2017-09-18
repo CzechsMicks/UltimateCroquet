@@ -86,109 +86,109 @@ class CroquetGame {
 
     
     
-//    func loginUser(email: String, password: String, completionHandler: @escaping (Bool, Error?) -> Void) {
-//        var request = URLRequest(url: URL(string: host + "genome/auth/connect")!)
-//        request.httpMethod = "POST"
-//        let postString = "{\"UserEmail\":\"" + email + "\", \"UserPassword\":\"" + password + "\", \"AppToken\":\"Ultimate Croquet\"}"
-//        request.httpBody = postString.data(using: .utf8)
-//        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-//            guard let data = data, error == nil else {
-//                //TODO: check for fundamental networking error
-//                completionHandler(false, error)
-//                return
-//            }
-//            
-//            if let httpStatus = response as? HTTPURLResponse, (httpStatus.statusCode != 201) {
-//                // check for http errors
-//                print("login statusCode should be 200, but is \(httpStatus.statusCode)")
-//                completionHandler(false, error)
-//                return
-//            }
-//            
-//            do{ // Parse Json Object and Get User Token
-//                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]{
-//                    if let token = json["UserToken"] as? String {
-//                        self.userToken = token
-//                        completionHandler(true, nil)
-//                        return
-//                    }
-//                }
-//            }catch{
-//                print("Unable to parse json object durring login")
-//            }
-//            completionHandler(false, error)
-//            return
-//        }
-//        task.resume()
-//    }
-//    
-//    
-//    
-//    func addUsersRecentlyPlayedTracks(completionHandler: @escaping (Int) -> Void) {
-//        var request = URLRequest(url: URL(string: host + "genome/music/recentlyPlayedTracks")!)
-//        request.httpMethod = "POST"
-//        let postString = "{\"UserToken\":\"" + (self.userToken)! + "\" , \"AppToken\":\"Ultimate Croquet\"}"
-//        request.httpBody = postString.data(using: .utf8)
-//        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-//            guard let data = data, error == nil else {
-//                //TODO: check for fundamental networking error
-//                return
-//            }
-//            
-//            if let httpStatus = response as? HTTPURLResponse, (httpStatus.statusCode != 200) {
-//                // check for http errors
-//                print("recentlyPlayedTracks statusCode should be 200, but is \(httpStatus.statusCode)")
-//                if(httpStatus.statusCode == 401){
-//                    completionHandler(httpStatus.statusCode)
-//                }
-//                return
-//            }
-//            
-//            do{ // Parse Json Object and Get User Token
-//                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]{
-//                    if let trackList = json["Tracks"] as? [[String: String]]{
-//                        for index in 1..<8{
-//                            self._player._balls[index] = false
-//                        }
-//                        self.unlockedBall(0)
-//                        self.unlockedBall(4)
-//                        for index in 0..<2 { //most 2 recent
-//                            let title = trackList[index]["Title"]
-//                            let artist = trackList[index]["Artist"]
-//                            let album = trackList[index]["Album"]
-//                            let dateString = trackList[index]["DatePlayed"]
-//                            
-//                            let dateFormatter = DateFormatter()
-//                            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
-//                            
-//                            let date = dateFormatter.date(from: dateString!)
-//                            
-//                            
-//                            //0: redBall2, 1: disco, 2: poke, 3: beach, 4: spotify,
-//                            //5: pandora, 6: vinyl, 7: youtube
-//                            ///update valid balls based on data.
-//                            if(title == "Stayin' Alive"){
-//                                self.unlockedBall(1)
-//                            }
-//                            if(title?.contains("Live"))!{
-//                                self.unlockedBall(3)
-//                            }
-//                            if(title?.contains("Remix"))!{
-//                                self.unlockedBall(6)
-//                            }
-//                            if(title == "Pokemon Theme"){
-//                                self.unlockedBall(2)
-//                            }
-//                        }
-//                    }
-//                }
-//            }catch{
-//                print("Unable to parse json object durring recently played")
-//            }
-//            completionHandler(200)
-//        }
-//        task.resume()
-//    }
+    func loginUser(email: String, password: String, completionHandler: @escaping (Bool, Error?) -> Void) {
+        var request = URLRequest(url: URL(string: host + "genome/auth/connect")!)
+        request.httpMethod = "POST"
+        let postString = "{\"UserEmail\":\"" + email + "\", \"UserPassword\":\"" + password + "\", \"AppToken\":\"Ultimate Croquet\"}"
+        request.httpBody = postString.data(using: .utf8)
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                //TODO: check for fundamental networking error
+                completionHandler(false, error)
+                return
+            }
+            
+            if let httpStatus = response as? HTTPURLResponse, (httpStatus.statusCode != 201) {
+                // check for http errors
+                print("login statusCode should be 200, but is \(httpStatus.statusCode)")
+                completionHandler(false, error)
+                return
+            }
+            
+            do{ // Parse Json Object and Get User Token
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]{
+                    if let token = json["UserToken"] as? String {
+                        self.userToken = token
+                        completionHandler(true, nil)
+                        return
+                    }
+                }
+            }catch{
+                print("Unable to parse json object durring login")
+            }
+            completionHandler(false, error)
+            return
+        }
+        task.resume()
+    }
+    
+    
+    
+    func addUsersRecentlyPlayedTracks(completionHandler: @escaping (Int) -> Void) {
+        if let urlString = URL(string: "http://35.165.224.147:60000/genome/entertainment?UserToken=\(self.userToken ?? "NoToken")&AppToken=UltimateCroquet&Scopes=recently_played_tracks") {
+            var request = URLRequest(url: urlString)
+            request.httpMethod = "GET"
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                guard let data = data, error == nil else {
+                    //TODO: check for fundamental networking error
+                    return
+                }
+                
+                if let httpStatus = response as? HTTPURLResponse, (httpStatus.statusCode != 200) {
+                    // check for http errors
+                    print("recentlyPlayedTracks statusCode should be 200, but is \(httpStatus.statusCode)")
+                    if(httpStatus.statusCode == 401){
+                        completionHandler(httpStatus.statusCode)
+                    }
+                    return
+                }
+                
+                do{ // Parse Json Object and Get User Token
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]{
+                        if let trackList = json["recently_played_tracks"] as? [[String: String]]{
+                            for index in 1..<8{
+                                self._player._balls[index] = false
+                            }
+                            self.unlockedBall(0)
+                            self.unlockedBall(4)
+                            for index in 0..<trackList.count { //most 2 recent
+                                let title = trackList[index]["Title"]
+                                let artist = trackList[index]["Artist"]
+                                let album = trackList[index]["Album"]
+                                let dateString = trackList[index]["DatePlayed"]
+                                
+                                let dateFormatter = DateFormatter()
+                                dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSS"
+                                
+                                let date = dateFormatter.date(from: dateString!)
+                                
+                                
+                                //0: redBall2, 1: disco, 2: poke, 3: beach, 4: spotify,
+                                //5: pandora, 6: vinyl, 7: youtube
+                                ///update valid balls based on data.
+                                if(title == "Stayin' Alive"){
+                                    self.unlockedBall(1)
+                                }
+                                if(title?.contains("Live"))!{
+                                    self.unlockedBall(3)
+                                }
+                                if(title?.contains("Remix"))!{
+                                    self.unlockedBall(6)
+                                }
+                                if(title == "Pokemon Theme"){
+                                    self.unlockedBall(2)
+                                }
+                            }
+                        }
+                    }
+                }catch{
+                    print("Unable to parse json object durring recently played")
+                }
+                completionHandler(200)
+            }
+            task.resume()
+        }
+    }
 
     
     func writeToFile(){
@@ -248,13 +248,13 @@ class CroquetGame {
                         setUpPlayer._levelScores[index] = element
                     }
                     
-                    let balls: [Bool] = game.value(forKey: "balls") as! [Bool]
-                    for (index, element) in balls.enumerated() {
-                        setUpPlayer._balls[index] = element
-                    }
-
-                    let currentBall: Int = (game.value(forKey: "currentBall")! as AnyObject).intValue
-                    setUpPlayer._currentBall = currentBall
+//                    let balls: [Bool] = game.value(forKey: "balls") as! [Bool]
+//                    for (index, element) in balls.enumerated() {
+//                        setUpPlayer._balls[index] = element
+//                    }
+//
+//                    let currentBall: Int = (game.value(forKey: "currentBall")! as AnyObject).intValue
+//                    setUpPlayer._currentBall = currentBall
                     
                     let email: String = (game.value(forKey: "email")! as AnyObject).description
                     setUpPlayer._email = email

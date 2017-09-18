@@ -41,9 +41,9 @@ class BallSelectController: UIViewController{
         }
         
         //make all balls available
-        for index in 1..<8{
-            _player.unlockedBall(index)
-        }
+//        for index in 1..<8{
+//            _player.unlockedBall(index)
+//        }
         
         navigationController?.isNavigationBarHidden = true
         view = SKView(frame: view.frame)
@@ -291,24 +291,24 @@ class BallSelectController: UIViewController{
             
             /// Genome functionality
             
-//            self._player.loginUser(email: _email!, password: _pass!, completionHandler: {(success, error) -> () in
-//                if (success) {
-//                    self._player.setEmail(email: _email!)
-//                    self._player.setPassword(password: _pass!)
-//                    self._player.unlockedBall(4)
-//                    self._player.addUsersRecentlyPlayedTracks(){(statusCode) -> Void in
-//                        if(statusCode == 401){
-//                            let alert = UIAlertController(title: "Oops", message: "Looks like you denied this App some Genome permissions! Head back to Genome to grant us access so we can get the ball rollin'!", preferredStyle: UIAlertControllerStyle.alert)
-//                            alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
-//                            self.present(alert, animated: true, completion: nil)
-//                        }
-//                        self.buttons()
-//                    }
-//                } else {
-//                    print("Error durring login " + error.debugDescription)
-//                }
-//                
-//            })
+            self._player.loginUser(email: _email!, password: _pass!, completionHandler: {(success, error) -> () in
+                if (success) {
+                    self._player.setEmail(email: _email!)
+                    self._player.setPassword(password: _pass!)
+                    self._player.unlockedBall(4)
+                    self._player.addUsersRecentlyPlayedTracks(){(statusCode) -> Void in
+                        if(statusCode == 401){
+                            let alert = UIAlertController(title: "Oops", message: "Looks like you denied this App some Genome permissions! Head back to Genome to grant us access so we can get the ball rollin'!", preferredStyle: UIAlertControllerStyle.alert)
+                            alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
+                            self.present(alert, animated: true, completion: nil)
+                        }
+                        self.buttons()
+                    }
+                } else {
+                    print("Error durring login " + error.debugDescription)
+                }
+                
+            })
             
         }))
 
